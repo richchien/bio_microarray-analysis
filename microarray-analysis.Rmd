@@ -47,7 +47,7 @@ celfiles <- system.file("extdata", package="arrays")
 eset <- justRMA(phenoData=phenoData, celfile.path=celfiles)
 ```
 
-Build combined datase with COMBAT batch effect removal 
+Build combined database with COMBAT batch effect removal 
 
 ```{r combine}
 esetlist = list(dfhcc, emc2, mainz, mda5, msk, tam, tamguyt, tamguyt2, transbig, unt, upp, vdx1, vdx3, vdxn, tabm, bc, nuv, nuv2)
