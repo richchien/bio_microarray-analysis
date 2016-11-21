@@ -1,21 +1,15 @@
----
-title: "microarray analysis"
-author: "Rich Chien"
-date: "October 23, 2016"
-output: 
-  html_document: 
-    keep_md: yes
----
+# microarray analysis
+Rich Chien  
+October 23, 2016  
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
-```
+
 
 ### Setup
 
 Load packages
 
-```{r libs, eval=FALSE}
+
+```r
 library(affy)   
 library(limma)
 library(GEOquery)
@@ -25,17 +19,31 @@ library(inSilicoMerging)
 Full set of GEO databases used in this study  
 \* Duplicate samples were removed from TAM, UNT, UPP
 
-```{r fullset, echo=F, warning=F}
-library(knitr)
-esetlist <- read.csv("./eset_table.csv")
-kable(esetlist)
-```
+
+Set.Name     Source                 Survival    Sample.. 
+-----------  ---------------------  ----------  ---------
+BC           GEO:GSE21653           RFS         266      
+DFHCC        GEO: GSE19615          DMFS        115      
+EMC2         GEO: GSE12276          DMFS        204      
+E-TABM-158   AE: E-TABM-158         DMFS, RFS   118      
+HATZIS       GEO:GSE25055           DMFS        310      
+HATZIS2      GEO:GSE25065           DMFS        198      
+MAINZ        GEO: GSE11121          DMFS        200      
+MDA5         GEO: GSE17705          DMFS        298      
+MSK          GEO: GSE2603           DMFS        99       
+TAM          GEO: GSE6532/GSE9195   DMFS, RFS   251*     
+TRANSBIG     GEO: GSE7390           DMFS, RFS   198      
+UNT          GEO: GSE2990           DMFS, RFS   83*      
+UPP          GEO: GSE3494           RFS         190*     
+VDX          GEO: GSE2034/GSE5327   DMFS        344      
+VDX3         GEO: GSE12093          DMFS        136      
 
 
 Download GEO Raw files and unzip
 Example using the EMC dataset GSE12276
 
-```{r geo, eval=FALSE}
+
+```r
 if(length(dir("Data/GEO/",pattern="GSE12276"))==0)
 {
   getGEOSuppFiles("GSE12276", makeDirectory = TRUE, baseDir = "./Data/GEO/")
@@ -45,7 +53,6 @@ if(length(dir("Data/GEO/",pattern="GSE12276"))==0)
 # (optional) gunzip
 cels <- list.files("./Data/GEO/", pattern = "[gz]")
 sapply(paste("./Data/GEO/", cels, sep="/"), gunzip)
-
 ```
 
 Download phenotype data from source
@@ -53,14 +60,16 @@ Download phenotype data from source
 
 RMA normalization
 
-```{r normalize, eval=FALSE}
+
+```r
 celfiles <- system.file("extdata", package="arrays")
 eset <- justRMA(phenoData=phenoData, celfile.path=celfiles)
 ```
 
 Build combined database with COMBAT batch effect removal 
 
-```{r combine, eval=FALSE}
+
+```r
 esetlist = list(list_of_eset)
 memory.limit(size=6000)
 combinedset = merge(esetlist, method="COMBAT")
@@ -71,7 +80,7 @@ When multiple probes match same gene
 * take the probe with the largest variance. (nsfilter from genefilter)
 
 filter off dups and affy probes
-```{r filter probes, eval=FALSE}
 
+```r
 fcombinedset <- nsFilter(combinedset, require.entrez=FALSE, require.GOBP=FALSE, require.GOCC=FALSE, require.GOMF=FALSE, require.CytoBand=FALSE, remove.dupEntrez=TRUE, var.func=IQR, var.cutoff=0.5, var.filter=FALSE, filterByQuantile=FALSE, feature.exclude="^AFFX")
 ```
