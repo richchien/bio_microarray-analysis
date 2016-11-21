@@ -28,7 +28,7 @@ Full set of GEO databases used in this study
 ```{r fullset, echo=F, warning=F}
 library(knitr)
 esetlist <- read.csv("./eset_table.csv")
-kable(esetlist)
+kable(esetlist, format="markdown",row.names=FALSE)
 ```
 
 
