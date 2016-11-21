@@ -22,13 +22,23 @@ library(GEOquery)
 library(inSilicoMerging)
 ```
 
+Full set of GEO databases used in this study
+
+```{r fullset, echo=FALSE}
+library(knitr)
+esetlist <- read.csv("./eset_table.csv")
+kable(esetlist)
+```
+
+
 Download GEO Raw files and unzip
+Example using the EMC dataset GSE12276
 
 ```{r geo}
-if(length(dir("Data/GEO/",pattern="GSE29617"))==0)
+if(length(dir("Data/GEO/",pattern="GSE12276"))==0)
 {
-  getGEOSuppFiles("GSE29617", makeDirectory = TRUE, baseDir = "./Data/GEO/")
-  untar("./Data/GEO/GSE29617/GSE29617_RAW.tar", exdir="./Data/GEO/GSE29617/", tar=Sys.getenv("TAR"))
+  getGEOSuppFiles("GSE12276", makeDirectory = TRUE, baseDir = "./Data/GEO/")
+  untar("./Data/GEO/GSE12276/GSE12276_RAW.tar", exdir="./Data/GEO/GSE12276/", tar=Sys.getenv("TAR"))
 }
 
 # (optional) gunzip
@@ -50,7 +60,7 @@ eset <- justRMA(phenoData=phenoData, celfile.path=celfiles)
 Build combined database with COMBAT batch effect removal 
 
 ```{r combine}
-esetlist = list(dfhcc, emc2, mainz, mda5, msk, tam, tamguyt, tamguyt2, transbig, unt, upp, vdx1, vdx3, vdxn, tabm, bc, nuv, nuv2)
+esetlist = list(list_of_eset)
 memory.limit(size=6000)
 combinedset = merge(esetlist, method="COMBAT")
 ```
