@@ -273,7 +273,12 @@ memory.limit(size=6000)
 combinedset = merge(esetlist, method=&quot;COMBAT&quot;)</code></pre>
 <p>When multiple probes match same gene * take mean of all probes matching to the gene. (<a href="http://www.inside-r.org/packages/cran/WGCNA/docs/collapseRows" class="uri">http://www.inside-r.org/packages/cran/WGCNA/docs/collapseRows</a>) * take the probe with the largest variance. (nsfilter from genefilter)</p>
 <p>filter off dups and affy probes</p>
-<pre class="r"><code>fcombinedset &lt;- nsFilter(combinedset, require.entrez=FALSE, require.GOBP=FALSE, require.GOCC=FALSE, require.GOMF=FALSE, require.CytoBand=FALSE, remove.dupEntrez=TRUE, var.func=IQR, var.cutoff=0.5, var.filter=FALSE, filterByQuantile=FALSE, feature.exclude=&quot;^AFFX&quot;)</code></pre>
+<pre class="r"><code>fcombinedset &lt;- nsFilter(
+  combinedset, require.entrez=FALSE, require.GOBP=FALSE, 
+  require.GOCC=FALSE, require.GOMF=FALSE, require.CytoBand=FALSE, 
+  remove.dupEntrez=TRUE, var.func=IQR, var.cutoff=0.5, 
+  var.filter=FALSE, filterByQuantile=FALSE, 
+  feature.exclude=&quot;^AFFX&quot;)</code></pre>
 </div>
 <div id="quality-metrics" class="section level3">
 <h3>Quality Metrics</h3>

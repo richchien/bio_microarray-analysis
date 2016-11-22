@@ -95,7 +95,12 @@ When multiple probes match same gene
 filter off dups and affy probes
 ```{r filter probes, eval=FALSE}
 
-fcombinedset <- nsFilter(combinedset, require.entrez=FALSE, require.GOBP=FALSE, require.GOCC=FALSE, require.GOMF=FALSE, require.CytoBand=FALSE, remove.dupEntrez=TRUE, var.func=IQR, var.cutoff=0.5, var.filter=FALSE, filterByQuantile=FALSE, feature.exclude="^AFFX")
+fcombinedset <- nsFilter(
+  combinedset, require.entrez=FALSE, require.GOBP=FALSE, 
+  require.GOCC=FALSE, require.GOMF=FALSE, require.CytoBand=FALSE, 
+  remove.dupEntrez=TRUE, var.func=IQR, var.cutoff=0.5, 
+  var.filter=FALSE, filterByQuantile=FALSE, 
+  feature.exclude="^AFFX")
 ```
 
 
