@@ -141,7 +141,10 @@ names(fdata)[names(fdata)=="ENTREZID"] <- "EntrezGene.ID"
 fdata$probe <- rownames(fdata)
 
 # make prediction
-pred.pam50 <- intrinsic.cluster.predict(sbt.model=pam50.robust, data=expdata, annot=fdata, do.mapping = TRUE, do.prediction.strength = FALSE, verbose = FALSE)
+pred.pam50 <- intrinsic.cluster.predict(
+  sbt.model = pam50.robust, data=expdata, annot=fdata, 
+  do.mapping = TRUE, do.prediction.strength = FALSE, 
+  verbose = FALSE)
 
 table(pred.pam50$subtype)
 
@@ -163,7 +166,10 @@ design.mat <- model.matrix(~0 + type)
 colnames(design.mat) <- gsub("type", "", colnames(design.mat))
 
 # Set up contrast matrix
-contrast.mat <- makeContrasts(Basal_LumA = Basal - LumA, Basal_LumB = Basal - LumB, levels=design)
+contrast.mat <- makeContrasts(
+  Basal_LumA = Basal - LumA, 
+  Basal_LumB = Basal - LumB, 
+  levels=design)
 
 # fit limma model to expression data
 library(limma)
