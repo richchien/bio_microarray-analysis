@@ -99,7 +99,7 @@ fcombinedset <- nsFilter(combinedset, require.entrez=FALSE, require.GOBP=FALSE, 
 ```
 
 
-### Quality Metrics
+### Quality Metrics  
 
 array Quality Metrics can be used to generate a quality report for microarray data
 
@@ -109,7 +109,7 @@ arrayQualityMetrics(fcombined,force = FALSE,do.logtransform = FALSE,spatial = FA
 ```
 
 
-### Breast cancer subtype generation
+### Breast cancer subtype generation  
 
 PAM50 clustering provided by the genefu package can be applied to predict breast cancer subtypes.
 
@@ -136,7 +136,8 @@ table(pred.pam50$subtype)
 pdata$pam50 <- pred.pam50$subtype
 ```
 
-### Differential gene expression
+
+### Differential gene expression  
 
 Explore differentially expressed genes in Basal type breast cancer.
 

@@ -131,6 +131,23 @@ $(document).ready(function () {
 library(limma)
 library(GEOquery)
 library(inSilicoMerging)</code></pre>
+<p>Exploring GEO datasets<br />
+The GEOmetadb library allows a searching through GEO data via SQlite database.</p>
+<pre class="r"><code>library(GEOmetadb)
+
+# Download SQlite file with all meta data (large file)
+if (!file.exists(&quot;GEOmetadb.sqlite&quot;)) {
+    # Download database only if it's not done already
+    getSQLiteFile()
+}
+
+geo &lt;- dbConnect(SQLite(), &quot;GEOmetadb.sqlite&quot;)
+
+dbListTables(geo)
+dbListFields(geo)
+
+# Find a dataset (GSE12276) via query
+dbGetQuery(geo_con, &quot;SELECT gse.ID, gse.title, gse.gse FROM gse WHERE gse.gse='GSE12276';&quot;)</code></pre>
 <p>Full set of GEO databases used in this study<br />
 * Duplicate samples were removed from TAM, UNT, UPP</p>
 <table>
@@ -235,7 +252,8 @@ library(inSilicoMerging)</code></pre>
 </tr>
 </tbody>
 </table>
-<p>Download GEO Raw files and unzip Example using the EMC dataset GSE12276</p>
+<p>Download GEO Raw files and unzip<br />
+Example using the EMC dataset GSE12276</p>
 <pre class="r"><code>if(length(dir(&quot;Data/GEO/&quot;,pattern=&quot;GSE12276&quot;))==0)
 {
   getGEOSuppFiles(&quot;GSE12276&quot;, makeDirectory = TRUE, baseDir = &quot;./Data/GEO/&quot;)
@@ -256,6 +274,67 @@ combinedset = merge(esetlist, method=&quot;COMBAT&quot;)</code></pre>
 <p>When multiple probes match same gene * take mean of all probes matching to the gene. (<a href="http://www.inside-r.org/packages/cran/WGCNA/docs/collapseRows" class="uri">http://www.inside-r.org/packages/cran/WGCNA/docs/collapseRows</a>) * take the probe with the largest variance. (nsfilter from genefilter)</p>
 <p>filter off dups and affy probes</p>
 <pre class="r"><code>fcombinedset &lt;- nsFilter(combinedset, require.entrez=FALSE, require.GOBP=FALSE, require.GOCC=FALSE, require.GOMF=FALSE, require.CytoBand=FALSE, remove.dupEntrez=TRUE, var.func=IQR, var.cutoff=0.5, var.filter=FALSE, filterByQuantile=FALSE, feature.exclude=&quot;^AFFX&quot;)</code></pre>
+</div>
+<div id="quality-metrics" class="section level3">
+<h3>Quality Metrics</h3>
+<p>array Quality Metrics can be used to generate a quality report for microarray data</p>
+<pre class="r"><code>library(arrayQualityMetrics)
+arrayQualityMetrics(fcombined,force = FALSE,do.logtransform = FALSE,spatial = FALSE)</code></pre>
+</div>
+<div id="breast-cancer-subtype-generation" class="section level3">
+<h3>Breast cancer subtype generation</h3>
+<p>PAM50 clustering provided by the genefu package can be applied to predict breast cancer subtypes.</p>
+<pre class="r"><code>library(genefu)
+
+# expression data
+expdata &lt;- t(exprs(fcombinedset))
+
+# meta data
+pdata &lt;- pData(fcombinedset)
+
+# probe data
+fdata &lt;- fData(fcombinedset)
+# rename column
+names(fdata)[names(fdata)==&quot;ENTREZID&quot;] &lt;- &quot;EntrezGene.ID&quot;
+fdata$probe &lt;- rownames(fdata)
+
+# make prediction
+pred.pam50 &lt;- intrinsic.cluster.predict(sbt.model=pam50.robust, data=expdata, annot=fdata, do.mapping = TRUE, do.prediction.strength = FALSE, verbose = FALSE)
+
+table(pred.pam50$subtype)
+
+pdata$pam50 &lt;- pred.pam50$subtype</code></pre>
+</div>
+<div id="differential-gene-expression" class="section level3">
+<h3>Differential gene expression</h3>
+<p>Explore differentially expressed genes in Basal type breast cancer.</p>
+<pre class="r"><code># Set up design matrix
+type &lt;- as.factor(pdata$pam50)
+design.mat &lt;- model.matrix(~0 + type)
+
+# rename columns to easier names
+colnames(design.mat) &lt;- gsub(&quot;type&quot;, &quot;&quot;, colnames(design.mat))
+
+# Set up contrast matrix
+contrast.mat &lt;- makeContrasts(Basal_LumA = Basal - LumA, Basal_LumB = Basal - LumB, levels=design)
+
+# fit limma model to expression data
+library(limma)
+
+fit &lt;- lmFit(exprs(fcombinedset, design.mat))
+cfit &lt;- contrasts.fit(fit, contrast.mat)
+efit &lt;- eBayes(cfit)
+# return the top 10 results for contrasts
+# coef=1 is first contrast, coef=2 is 2nd contrast
+res &lt;- topTable(efit, number=10, coef=1)
+
+# annotate with gene names
+biocLite(&quot;hgu133plus2.db&quot;)
+library(hgu133plus2.db)
+library(annotate)
+
+gene &lt;- getSYMBOL(res$ID, &quot;hgu133plus2&quot;)
+res &lt;- cbind(res, gene)</code></pre>
 </div>
 
 

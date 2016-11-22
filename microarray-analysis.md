@@ -16,6 +16,29 @@ library(GEOquery)
 library(inSilicoMerging)
 ```
 
+
+Exploring GEO datasets  
+The GEOmetadb library allows a searching through GEO data via SQlite database.
+
+```r
+library(GEOmetadb)
+
+# Download SQlite file with all meta data (large file)
+if (!file.exists("GEOmetadb.sqlite")) {
+    # Download database only if it's not done already
+    getSQLiteFile()
+}
+
+geo <- dbConnect(SQLite(), "GEOmetadb.sqlite")
+
+dbListTables(geo)
+dbListFields(geo)
+
+# Find a dataset (GSE12276) via query
+dbGetQuery(geo_con, "SELECT gse.ID, gse.title, gse.gse FROM gse WHERE gse.gse='GSE12276';")
+```
+
+
 Full set of GEO databases used in this study  
 \* Duplicate samples were removed from TAM, UNT, UPP
 
@@ -39,7 +62,7 @@ Full set of GEO databases used in this study
 |VDX3       |GEO: GSE12093        |DMFS      |136      |
 
 
-Download GEO Raw files and unzip
+Download GEO Raw files and unzip  
 Example using the EMC dataset GSE12276
 
 
@@ -84,3 +107,83 @@ filter off dups and affy probes
 ```r
 fcombinedset <- nsFilter(combinedset, require.entrez=FALSE, require.GOBP=FALSE, require.GOCC=FALSE, require.GOMF=FALSE, require.CytoBand=FALSE, remove.dupEntrez=TRUE, var.func=IQR, var.cutoff=0.5, var.filter=FALSE, filterByQuantile=FALSE, feature.exclude="^AFFX")
 ```
+
+
+### Quality Metrics  
+
+array Quality Metrics can be used to generate a quality report for microarray data
+
+
+```r
+library(arrayQualityMetrics)
+arrayQualityMetrics(fcombined,force = FALSE,do.logtransform = FALSE,spatial = FALSE)
+```
+
+
+### Breast cancer subtype generation  
+
+PAM50 clustering provided by the genefu package can be applied to predict breast cancer subtypes.
+
+
+```r
+library(genefu)
+
+# expression data
+expdata <- t(exprs(fcombinedset))
+
+# meta data
+pdata <- pData(fcombinedset)
+
+# probe data
+fdata <- fData(fcombinedset)
+# rename column
+names(fdata)[names(fdata)=="ENTREZID"] <- "EntrezGene.ID"
+fdata$probe <- rownames(fdata)
+
+# make prediction
+pred.pam50 <- intrinsic.cluster.predict(sbt.model=pam50.robust, data=expdata, annot=fdata, do.mapping = TRUE, do.prediction.strength = FALSE, verbose = FALSE)
+
+table(pred.pam50$subtype)
+
+pdata$pam50 <- pred.pam50$subtype
+```
+
+
+### Differential gene expression  
+
+Explore differentially expressed genes in Basal type breast cancer.
+
+
+```r
+# Set up design matrix
+type <- as.factor(pdata$pam50)
+design.mat <- model.matrix(~0 + type)
+
+# rename columns to easier names
+colnames(design.mat) <- gsub("type", "", colnames(design.mat))
+
+# Set up contrast matrix
+contrast.mat <- makeContrasts(Basal_LumA = Basal - LumA, Basal_LumB = Basal - LumB, levels=design)
+
+# fit limma model to expression data
+library(limma)
+
+fit <- lmFit(exprs(fcombinedset, design.mat))
+cfit <- contrasts.fit(fit, contrast.mat)
+efit <- eBayes(cfit)
+# return the top 10 results for contrasts
+# coef=1 is first contrast, coef=2 is 2nd contrast
+res <- topTable(efit, number=10, coef=1)
+
+# annotate with gene names
+biocLite("hgu133plus2.db")
+library(hgu133plus2.db)
+library(annotate)
+
+gene <- getSYMBOL(res$ID, "hgu133plus2")
+res <- cbind(res, gene)
+```
+
+
+
+
